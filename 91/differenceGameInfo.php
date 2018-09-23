@@ -41,13 +41,9 @@
 		for ($i = 0; $i < $count; $i++) {
 			$id_batch = $id_batches[$i];
 			mysqli_query($conn, "UPDATE batch SET used_times = used_times + 1 WHERE id_batch = '$id_batch';");
-			$out = mysqli_query($conn, "SELECT bi.id_validation FROM batch b INNER JOIN batch_image bi ON b.id_batch = bi.id_batch WHERE b.id_task = '2' AND b.id_batch = '$id_batch' GROUP BY bi.id_validation;");
-			foreach ($out as $key => $id) {
-				$id_validation = $id[id_validation];
-				$out2 = mysqli_query($conn, "SELECT id_image FROM image_cluster WHERE id_cluster = '$id_validation';");
-				foreach ($out2 as $key => $im) {
-					$image_ids[] = $im[id_image];
-				}
+			$out2 = mysqli_query($conn, "SELECT id_image FROM batch_image WHERE id_batch = '$id_batch' ORDER BY id_validation, RAND(".$randval.");");
+			foreach ($out2 as $key => $im) {
+				$image_ids[] = $im[id_image];
 			}
 		}
 	} else {
@@ -61,22 +57,16 @@
 		for ($i = 0; $i < $count; $i++) {
 			$id_batch = $id_batches[$i];
 			mysqli_query($conn, "UPDATE batch SET used_times = used_times + 1 WHERE id_batch = '$id_batch';");
-			$out = mysqli_query($conn, "SELECT bi.id_validation FROM batch b INNER JOIN batch_image bi ON b.id_batch = bi.id_batch WHERE b.id_task = '2' AND b.id_batch = '$id_batch' GROUP BY bi.id_validation;");
-			foreach ($out as $key => $id) {
-				$id_validation = $id[id_validation];
-				$out2 = mysqli_query($conn, "SELECT id_image FROM image_cluster WHERE id_cluster = '$id_validation';");
-				foreach ($out2 as $key => $im) {
-					$image_ids[] = $im[id_image];
-				}
-			}
-			foreach ($out as $key => $im) {
+			$out2 = mysqli_query($conn, "SELECT id_image FROM batch_image WHERE id_batch = '$id_batch' ORDER BY id_validation, RAND(".$randval.");");
+			foreach ($out2 as $key => $im) {
 				$image_ids[] = $im[id_image];
 			}
 		}
 	}
 	$count = count($image_ids);
 	for ($i = 0; $i < $count; $i++) {
-		$result = mysqli_query($conn, "SELECT i.name_cropped_image, c.id_cluster, ti.state FROM image i INNER JOIN image_cluster c INNER JOIN task_image ti ON i.id_image = c.id_image AND i.id_image = ti.id_image AND c.id_cluster = ti.id_validation WHERE i.id_image = ".$image_ids[$i]." AND ti.id_task = 2");
+		$id_image = $image_ids[$i];
+		$result = mysqli_query($conn, "SELECT i.name_cropped_image, c.id_cluster, ti.state FROM image i INNER JOIN image_cluster c INNER JOIN task_image ti ON i.id_image = c.id_image AND i.id_image = ti.id_image AND c.id_cluster = ti.id_validation WHERE i.id_image = '$id_image';");
 		$row = mysqli_fetch_assoc($result);
 		if ($row[state] != 7 && $row[state] != 8) {
 			$output[] = $row[name_cropped_image].";".$row[id_cluster].";0;0";
