@@ -17,10 +17,10 @@ def update_user_feedback(hostname, username, password, database):
 
 	#UPDATE TRANSCRIPTION GAME BATCHES -> id_task = 1 for TRANSCRIPTION GAME
 	query = ("""SELECT au.id_image, COUNT(*) 
-			FROM answer_user AS au INNER JOIN round AS r INNER JOIN batch AS b INNER JOIN batch_image AS bi 
-			ON au.id_round = r.id_round AND au.id_user = r.id_user AND r.id_batch = b.id_batch AND b.id_batch = bi.id_batch AND au.id_image = bi.id_image 
-			WHERE au.processed = 0 AND b.id_task = 1 AND b.active = 1 
-			GROUP BY au.id_image;""")
+				FROM answer_user AS au INNER JOIN round AS r INNER JOIN batch AS b INNER JOIN batch_image AS bi 
+				ON au.id_round = r.id_round AND au.id_user = r.id_user AND r.id_batch = b.id_batch AND b.id_batch = bi.id_batch AND au.id_image = bi.id_image 
+				WHERE au.processed = 0 AND b.id_task = 1 AND b.active = 1 
+				GROUP BY au.id_image;""")
 
 	cursor.execute(query)
 	result = cursor.fetchall()
@@ -57,6 +57,9 @@ def update_user_feedback(hostname, username, password, database):
 
 			res = rep/float(total)
 
+			if test:
+				print "possible result:", id_image, answer, res
+
 			if answer != NO_GOOD_ANSWER and res >= DECISION:
 				for proc in processeds:
 					if not test:
@@ -71,7 +74,7 @@ def update_user_feedback(hostname, username, password, database):
 
 						cursor.execute(query, data)
 					else:
-						print id_image, answer
+						print "result:", id_image, answer
 
 					query = ("SELECT state FRORM task_image WHERE id_image = %s;")
 					data = (id_image,)
@@ -132,7 +135,8 @@ def update_user_feedback(hostname, username, password, database):
 			data = (id_image,)
 
 			cursor.execute(query, data)
-			state = int(cursor.fetchone())
+			(state,) = cursor.fetchone()
+			state = int(state)
 
 			if state == 2 or state == 5:
 				count += 1
@@ -153,129 +157,146 @@ def update_user_feedback(hostname, username, password, database):
 	EQ = 3
 
 	#UPDATE CLUSTER GAME BATCHES -> id_task = 2 for CLUSTER GAME
-	query = ("""SELECT r.id_batch, COUNT(*)
-			FROM answer_user AS au INNER JOIN round AS r INNER JOIN batch AS b INNER JOIN batch_image AS bi 
-			ON au.id_round = r.id_round AND au.id_user = r.id_user AND r.id_batch = b.id_batch AND b.id_batch = bi.id_batch 
-			WHERE au.processed = 0 AND b.id_task = 2 AND b.active = 1
-			GROUP BY au.id_batch;""")
+	query = ("""SELECT au.id_image, COUNT(*)
+				FROM answer_user au INNER JOIN round r INNER JOIN batch b INNER JOIN batch_image bi 
+				ON au.id_round = r.id_round AND au.id_user = r.id_user AND r.id_batch = b.id_batch AND b.id_batch = bi.id_batch AND au.id_image = bi.id_image
+				WHERE au.processed = 0 AND b.id_task = 2 AND b.active = 1
+				GROUP BY au.id_image;""")
 
 	cursor.execute(query)
 	result = cursor.fetchall()
-	ID_BATCH = 0
+	ID_IMAGE = 0
 	COUNT = 1
-
+	dic = {}
 	for res in result:
-		count = res[COUNT]
-		if count >= 10:
-			id_batch = res[ID_BATCH]
-
-			query = ("""SELECT b.id_validation
-					FROM batch AS b INNER JOIN batch_image AS bi 
-					ON b.id_batch = bi.id_batch 
-					WHERE b.id_batch = %s 
-					GROUP BY b.id_validation;""")
-			data = (id_batch,)
+		if res[COUNT] >= 10:
+			query = ("SELECT id_batch FROM batch_image WHERE id_image = %s;")
+			data = (res[ID_IMAGE],)
 
 			cursor.execute(query, data)
+			(id_batch,) = cursor.fetchone()
 
-			id_clusters = [i for (i,) in cursor.fetchall()]
+			if id_batch not in dic:
+				dic[id_batch] = 1
+	if test:
+		print "dic size:", len(dic)
+	for id_batch, _ in dic.iteritems():
+		query = ("""SELECT bi.id_validation
+				FROM batch b INNER JOIN batch_image bi 
+				ON b.id_batch = bi.id_batch 
+				WHERE b.id_batch = %s 
+				GROUP BY bi.id_validation;""")
+		data = (id_batch,)
 
-			for id_cluster in id_clusters:
+		cursor.execute(query, data)
 
-				query = ("SELECT id_image FROM image_cluster WHERE id_cluster = %s;")
-				data = (id_cluster,)
+		id_clusters = [i for (i,) in cursor.fetchall()]
+
+		for id_cluster in id_clusters:
+
+			query = ("SELECT id_image FROM image_cluster WHERE id_cluster = %s;")
+			data = (id_cluster,)
+
+			cursor.execute(query, data)
+			images = [i for (i,) in cursor.fetchall()]
+
+			all_results = []
+			total_images_in_cluster = len(images)
+			total = 0
+			for id_image in images:
+
+				query = ("SELECT answer FROM answer_user WHERE id_image = %s AND processed = 0;")
+				data = (id_image,)
 
 				cursor.execute(query, data)
-				images = [i for (i,) in cursor.fetchall()]
+				res = [i for (i,) in cursor.fetchall()]
 
-				all_results = []
-				total = 0
-				for id_image in images:
+				total = total + len(res)
+				dic = [0,0,0,0]
+				for out in res:
+					if out == "0":
+						dic[ZERO] += 1
+					elif out == "1":
+						dic[ONE] += 1
+					elif out == "diff":
+						dic[DIFF] += 1
+					else:
+						dic[EQ] += 1
 
-					query = ("SELECT answer FROM answer_user WHERE id_image = %s AND processed = 0;")
-					data = (id_image,)
+				all_results.append((id_image, dic))
+			if total == 0:
+				continue
+			else:
+				total = total/total_images_in_cluster
+			compare_num = -1
+			for (im, res) in all_results:
+				highest = max(res)
+				index = res.index(highest)
 
-					cursor.execute(query, data)
-					res = [i for (i,) in cursor.fetchall()]
-
-					total = total + len(res)
-					dic = [0,0,0,0]
-					for out in res:
-						if out == "0":
-							dic[ZERO] += 1
-						elif out == "1":
-							dic[ONE] += 1
-						elif out == "diff":
-							dic[DIFF] += 1
-						else:
-							dic[EQ] += 1
-
-					all_results.append((id_image, dic))
-				compare_num = -1
-				for (im, res) in all_results:
-					highest = max(res)
-					index = res.index(highest)
-
-					if index == ONE:
-						if highest > compare_num:
-							compare_num = highest
-							final_result = im
-					elif index == DIFF:
+				if index == ONE:
+					if highest > compare_num:
+						compare_num = highest
+						final_result = im
+				elif index == DIFF:
+					if highest > compare_num:
+						compare_num = highest
 						final_result = "diff"
 						break
-					elif index == EQ:
+				elif index == EQ:
+					if highest > compare_num:
+						compare_num = highest
 						final_result = "eq"
 						break
 
-				compare_num = highest
-				if compare_num/float(total) >= DECISION:
+			res = compare_num/float(total)
+			if test:
+				print "possible result:", id_image, final_result, res, compare_num, total
+			if res >= DECISION:
+				if not test:
+					query = ("UPDATE cluster SET final_result = %s WHERE id_cluster = %s;")
+					data = (final_result, id_cluster)
+
+					cursor.execute(query, data)
+				else:
+					print "result:", id_cluster, final_result
+
+				for id_image in images:
+
+					query = ("SELECT id_answer_user FROM answer_user WHERE id_image = %s AND processed = 0;")
+					data = (id_image,)
+
+					cursor.execute(query, data)
+					processeds = [i for (i,) in cursor.fetchall()]
+
 					if not test:
-						query = ("UPDATE cluster SET final_result = %s WHERE id_cluster = %s;")
-						data = (final_result, id_cluster)
-
-						cursor.execute(query, data)
-					else:
-						print id_cluster, final_result
-
-					for im in images:
-						id_image = im['id_image']
-
-						query = ("SELECT id_answer_user FROM answer_user WHERE id_image = %s AND processed = 0;")
-						data = (id_image,)
-
-						cursor.execute(query, data)
-						processeds = [i for (i,) in cursor.fetchall()]
-
-						if not test:
-							for proc in processeds:
-								query = ("UPDATE answer_user SET processed = 1 WHERE id_answer_user = %s;")
-								data = (proc,)
-
-								cursor.execute(query, data)
-							conn.commit()
-
-						next_state = 4
-
-						if not test:
-							query = ("UPDATE task_image SET state = %s WHERE id_image = %s;")
-							data = (next_state, id_image)
+						for proc in processeds:
+							query = ("UPDATE answer_user SET processed = 1 WHERE id_answer_user = %s;")
+							data = (proc,)
 
 							cursor.execute(query, data)
+						conn.commit()
+
+					next_state = 4
+
+					if not test:
+						query = ("UPDATE task_image SET state = %s WHERE id_image = %s;")
+						data = (next_state, id_image)
+
+						cursor.execute(query, data)
+
+					conn.commit()
+			else:
+				for id_image in images:
+
+					next_state = 9
+
+					if not test:
+						query = ("UPDATE task_image SET state = %s WHERE id_image = %s;")
+						data = (next_state, id_image)
+
+						cursor.execute(query, data)
 
 						conn.commit()
-				else:
-					for im in images:
-						id_image = im['id_image']
-
-						next_state = 9
-
-						if not test:
-							query = ("UPDATE task_image SET state = %s WHERE id_image = %s;")
-							data = (next_state, id_image)
-
-							cursor.execute(query, data)
-
-							conn.commit()
 
 
 				
