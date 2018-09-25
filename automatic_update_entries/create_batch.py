@@ -118,7 +118,7 @@ def create_batch(hostname, username, password, database):
 	conn.commit()
 
 	#ADD CLUSTER GAME BATCHES -> id_task = 2 for CLUSTER GAME
-	query = ("SELECT c.id_cluster FROM cluster c INNER JOIN task_image ti ON c.id_cluster = ti.id_validation WHERE c.used_in_batch = 0 AND ti.id_task = 2 AND (ti.state LIKE 1 OR ti.state LIKE 9) ORDER BY RAND(%s)")
+	query = ("SELECT c.id_cluster FROM cluster c INNER JOIN task_image ti ON c.id_cluster = ti.id_validation WHERE c.used_in_batch = 0 AND ti.id_task = 2 AND (ti.state LIKE 1 OR ti.state LIKE 9) GROUP BY c.id_cluster ORDER BY RAND(%s)")
 	data = (randint(1,196),)
 
 	cursor.execute(query, data)
@@ -218,7 +218,16 @@ def create_batch(hostname, username, password, database):
 			(id_batch,) = cursor.fetchone()
 
 			for clusters in range(NUM_ITEMS_PER_BATCH):
-				id_cluster = rows[pos]
+				while used_in_batch == 1:
+					id_cluster = rows[pos]
+					pos += 1
+					if pos >= len(rows):
+						pos = 0
+					query = ("SELECT used_in_batch FROM cluster WHERE id_cluster = %s")
+					data = (id_cluster,)
+					cursor.execute(query, data)
+					(used_in_batch,) = cursor.fetchone()
+				
 				query = ("UPDATE cluster SET used_in_batch = %s WHERE id_cluster = %s")
 				data = (1, id_cluster)
 				cursor.execute(query, data)
@@ -229,9 +238,6 @@ def create_batch(hostname, username, password, database):
 				cursor.execute(query, data)
 				images = [i for (i,) in cursor.fetchall()]
 				total_images += len(images)
-				pos += 1
-				if pos >= len(rows):
-					pos = 0
 				
 				for id_image in images:
 					query = ("INSERT INTO batch_image(id_batch, id_image, id_validation) VALUES(%s, %s, %s)")
