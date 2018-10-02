@@ -10,10 +10,28 @@ def update_user_feedback(hostname, username, password, database):
 
 	NO_GOOD_ANSWER = "none_of_these"
 	DECISION = 0.7
-	test = True
+	test = False
 
 	conn = sqlconn.connect(user=username, password=password, host=hostname, database=database)
 	cursor = conn.cursor()
+
+	#UPDATE used_times of both games
+	query = ("SELECT id_batch FROM batch WHERE used_times > 0;")
+	cursor.execute(query)
+
+	result = [i for (i,) in cursor.fetchall()]
+	for id_batch in result:
+		query = ("SELECT COUNT(*) FROM round WHERE id_batch = %s;")
+		data = (id_batch,)
+
+		cursor.execute(query, data)
+		(count,) = cursor.fetchone()
+
+		query = ("UPDATE batch SET used_times = %s WHERE id_batch = %s;")
+		data = (count, id_batch)
+
+		cursor.execute(query, data)
+
 
 	#UPDATE TRANSCRIPTION GAME BATCHES -> id_task = 1 for TRANSCRIPTION GAME
 	query = ("""SELECT au.id_image, COUNT(*) 
@@ -76,7 +94,7 @@ def update_user_feedback(hostname, username, password, database):
 					else:
 						print "result:", id_image, answer
 
-					query = ("SELECT state FRORM task_image WHERE id_image = %s;")
+					query = ("SELECT state FROM task_image WHERE id_image = %s;")
 					data = (id_image,)
 
 					cursor.execute(query, data)
@@ -94,7 +112,7 @@ def update_user_feedback(hostname, username, password, database):
 
 						conn.commit()
 			else:
-				query = ("SELECT state FRORM task_image WHERE id_image = %s;")
+				query = ("SELECT state FROM task_image WHERE id_image = %s;")
 				data = (id_image,)
 
 				cursor.execute(query, data)
