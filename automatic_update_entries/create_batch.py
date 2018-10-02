@@ -218,6 +218,7 @@ def create_batch(hostname, username, password, database):
 			(id_batch,) = cursor.fetchone()
 
 			for clusters in range(NUM_ITEMS_PER_BATCH):
+				used_in_batch = 1
 				while used_in_batch == 1:
 					id_cluster = rows[pos]
 					pos += 1
