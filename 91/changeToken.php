@@ -1,5 +1,4 @@
 <?php
-<<<<<<< HEAD
 	include 'Token.php';
 	$params = parse_ini_file("../config.ini");
 	$conn = mysqli_connect($params['hostname'],$params['username'],$params['password'],$params['db_name']);
@@ -39,16 +38,4 @@
 	}
 	mysqli_close();
 
-=======
-	function getNewToken($token) {
-		$replacements = "0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
-		$len = strlen($token) - 1;
-
-		$ran_token = rand(0,$len);
-		$ran_str = rand(0, strlen($replacements)-1);
-		$token[$ran_token] = $replacements[$ran_str];
-
-		return $token;
-	}
->>>>>>> 1fea1ede4c6765e6aa2c7362451b7a4fd6d0b840
 ?>
