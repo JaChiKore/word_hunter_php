@@ -6,7 +6,7 @@
 		echo "Failed to connect to MySQL: " . mysqli_connect_error();
 	}
 
-	$username = $_REQUEST['username'];
+	$username = $_POST['username'];
 
 	if ($username == NULL) {
 		$result = mysqli_query($conn, "SELECT u.username AS username, ut.max_score AS max_score FROM user u INNER JOIN user_task ut ON u.id_user = ut.id_user WHERE ut.id_task = 1 ORDER BY ut.max_score DESC LIMIT 10;");
@@ -20,21 +20,23 @@
 			$output2[] = $row[username].','.$row[max_score];
 		}
 
-		$count = count($output1);
+		$out1 = join('<br>',$output1);
+		$out2 = join('<br>',$output2);
+		$out = $out1.'separator<br>'.$out2;
 
-		for ($i = 0; $i < $count; $i++) {
-			print($output1[$i].'<br>');
-		}
-		print('separator<br>');
-		for ($i = 0; $i < $count; $i++) {
-			print($output2[$i].'<br>');
-		}
+		$send_data->res = $out;
+		$json = json_encode($send_data);
+		print($json);
 	} else {
 		$result = mysqli_query($conn, "SELECT ut.max_score AS max_score, ut.level AS level FROM user u INNER JOIN user_task ut ON u.id_user = ut.id_user WHERE u.username = '$username' AND ut.id_task = 1;");
 		$match = mysqli_fetch_object($result);
 		$result = mysqli_query($conn, "SELECT ut.max_score AS max_score, ut.level AS level FROM user u INNER JOIN user_task ut ON u.id_user = ut.id_user WHERE u.username = '$username' AND ut.id_task = 2;");
 		$diff = mysqli_fetch_object($result);
-		print($match->max_score.','.$diff->max_score.','.$match->level.','.$diff->level);
+		$out = $match->max_score.','.$diff->max_score.','.$match->level.','.$diff->level;
+		
+		$send_data->res = $out;
+		$json = json_encode($send_data);
+		print($json);
 	}
 
 	mysqli_close();
