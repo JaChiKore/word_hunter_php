@@ -31,7 +31,7 @@
 				$json = json_encode($send_data);
 				print($json);
 			} else {
-				$result = mysqli_query($conn, "SELECT max_score,level FROM user_task WHERE id_task = '1' AND id_user = '$username';");
+				$result = mysqli_query($conn, "SELECT max_score,level FROM user_task WHERE id_task = '1' AND id_user = '$id_user';");
 				$result = mysqli_fetch_object($result);
 				if (($score1 > ($result->max_score + 20)) or ($score1 < $result->max_score)) {
 					$score1 = $result->max_score;
@@ -41,7 +41,7 @@
 				}
 				$result = mysqli_query($conn, "UPDATE user_task SET max_score = '$score1', level = '$level1' WHERE id_task = '1' AND id_user = '$id_user';");
 
-				$result = mysqli_query($conn, "SELECT max_score,level FROM user_task WHERE id_task = '2' AND id_user = '$username';");
+				$result = mysqli_query($conn, "SELECT max_score,level FROM user_task WHERE id_task = '2' AND id_user = '$id_user';");
 				$result = mysqli_fetch_object($result);
 				if (($score2 > ($result->max_score + 20)) or ($score2 < $result->max_score)) {
 					$score2 = $result->max_score;

@@ -20,16 +20,16 @@
 
 	$result = mysqli_query($conn, "SELECT ut.level FROM user u INNER JOIN user_task ut ON u.id_user = ut.id_user WHERE ut.id_task = 2 AND u.username = '$username';");
 	$result = mysqli_fetch_object($result);
-	if ($result->level >= 4) {
-		if ($result->level == 4) {
-			$result = mysqli_query($conn, "SELECT id_batch FROM batch WHERE active = '1' AND id_task = '2' AND golden_tasks = 2 ORDER BY used_times, RAND(".$randval.") LIMIT 1;");
+	if ($result->level >= 3) {
+		if ($result->level == 3) {
+			$result = mysqli_query($conn, "SELECT id_batch FROM batch WHERE active = '1' AND id_task = '2' AND golden_tasks = 4 ORDER BY used_times, RAND(".$randval.") LIMIT 1;");
 			$result = mysqli_fetch_object($result);
 			$id_batches[] = $result->id_batch;
 			$limit = 1;
 		} else {
 			$limit = 2;
 		}
-		$result = mysqli_query($conn, "SELECT id_batch FROM batch WHERE active = '1' AND id_task = '2' AND golden_tasks = 0 ORDER BY used_times, RAND(".$randval.") LIMIT 2;");
+		$result = mysqli_query($conn, "SELECT id_batch FROM batch WHERE active = '1' AND id_task = '2' AND golden_tasks = 2 ORDER BY used_times, RAND(".$randval.") LIMIT 2;");
 		for ($i = 0; $i < $limit; $i++) {
 			$row = mysqli_fetch_row($result);
 			$id_batches[] = $row[0];
@@ -43,7 +43,7 @@
 			}
 		}
 	} else {
-		for ($i = $result->level; $i < $result->level + 3; $i++) {
+		for ($i = $result->level; $i < $result->level + 2; $i++) {
 			$goldens = 10 - $i*2;
 			$result = mysqli_query($conn, "SELECT id_batch FROM batch WHERE active = '1' AND id_task = '2' AND golden_tasks = '$goldens' ORDER BY used_times, RAND(".$randval.") LIMIT 1;");
 			$result = mysqli_fetch_object($result);
