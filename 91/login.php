@@ -24,8 +24,14 @@
 		$result = mysqli_query($conn, "SELECT u.password FROM user u WHERE u.username = '$username';");
 		$result = mysqli_fetch_object($result);
 		if (sha1($password) == $result->password) {
-			$token = generateToken($token);
-			mysqli_query($conn, "UPDATE user SET token = '$token' WHERE username = '$username';");
+			if ($username != "test") {
+				$token = generateToken($token);
+				mysqli_query($conn, "UPDATE user SET token = '$token' WHERE username = '$username';");
+			} else {
+				$res = mysqli_query($conn, "SELECT token FROM user WHERE username = '$username';");
+				$res = mysqli_fetch_object($res);
+				$token = $res->token;
+			}
 			$send_data->token = $token;
 			$send_data->res = "true";
 			$json = json_encode($send_data);

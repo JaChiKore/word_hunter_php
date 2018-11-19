@@ -16,17 +16,23 @@
 		$res = mysqli_query($conn, "SELECT token FROM user WHERE username = '$username';");
 		$res = mysqli_fetch_object($res);
 		$db_token = $res->token;
-		
-		if ($db_token == $token) {
-			$token = generateToken();
-			mysqli_query($conn, "UPDATE user SET token = '$token' WHERE username = '$username';");
-			$send_data->token = $token;
-			$send_data->res = "true";
-			$json = json_encode($send_data);
-			print($json);
+		if ($username != "test") {
+			if ($db_token == $token) {
+				$token = generateToken();
+				mysqli_query($conn, "UPDATE user SET token = '$token' WHERE username = '$username';");
+				$send_data->token = $token;
+				$send_data->res = "true";
+				$json = json_encode($send_data);
+				print($json);
+			} else {
+				$send_data->debug = "404 Not Found<br>\n";
+				$send_data->res = "false";
+				$json = json_encode($send_data);
+				print($json);
+			}
 		} else {
-			$send_data->debug = "404 Not Found<br>\n";
-			$send_data->res = "false";
+			$send_data->token = $db_token;
+			$send_data->res = "true";
 			$json = json_encode($send_data);
 			print($json);
 		}

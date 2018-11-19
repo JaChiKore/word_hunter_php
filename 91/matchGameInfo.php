@@ -71,11 +71,11 @@
 
 		while ($row = mysqli_fetch_assoc($result)) {
 			if ($row[state] == 6) {
-				print($row[name_cropped_image].";".$row[transcription].";1;0<br>");
+				print(utf8_encode($row[name_cropped_image].";".$row[transcription].";1;0<br>"));
 			} else if ($row[state] == 11) {
-				print($row[name_cropped_image].";".$row[transcription].";1;1<br>");
+				print(utf8_encode($row[name_cropped_image].";".$row[transcription].";1;1<br>"));
 			} else {
-				print($row[name_cropped_image].";".$row[transcription].";0;0<br>");
+				print(utf8_encode($row[name_cropped_image].";".$row[transcription].";0;0<br>"));
 			}
 		}
 	}

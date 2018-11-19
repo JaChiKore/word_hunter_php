@@ -32,6 +32,10 @@ def update_user_feedback(hostname, username, password, database):
 
 		cursor.execute(query, data)
 
+	#RESET test user session
+	query = ("UPDATE user_task SET max_score=0, level=1 WHERE id_user = 6;")
+	cursor.execute(query)
+	conn.commit()
 
 	#UPDATE TRANSCRIPTION GAME BATCHES -> id_task = 1 for TRANSCRIPTION GAME
 	query = ("""SELECT au.id_image, COUNT(*) 

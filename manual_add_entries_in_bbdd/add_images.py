@@ -28,7 +28,7 @@ def add_images(hostname, username, password, database, txt, folder):
 			ID = cropped_image_name.split("_")[1]
 
 			if ID in dic:
-				original_image_name = dic[ID]				
+				original_image_name = dic[ID]
 
 		query = ("INSERT INTO image(id_font, name_original_image, name_cropped_image, position_x1, position_y1, position_x2, position_y2) VALUES(%s, %s, %s, %s, %s, %s, %s)")
 		data = ('1', original_image_name, cropped_image_name, x1, y1, x2, y2)

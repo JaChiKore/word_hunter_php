@@ -58,7 +58,7 @@ def create_batch(hostname, username, password, database):
 					pos_golden = 0
 
 				query = ("UPDATE transcription SET used_in_batch = used_in_batch + 1 WHERE id_transcription = %s")
-				data = (1, id_transcription)
+				data = (id_transcription,)
 				cursor.execute(query, data)
 				
 				query = ("INSERT INTO batch_image(id_batch, id_image, id_validation) VALUES(%s, %s, %s)")
@@ -107,7 +107,7 @@ def create_batch(hostname, username, password, database):
 					pos_golden = 0
 
 				query = ("UPDATE transcription SET used_in_batch = used_in_batch + 1 WHERE id_transcription = %s")
-				data = (1, id_transcription)
+				data = (id_transcription,)
 				cursor.execute(query, data)
 				
 				query = ("INSERT INTO batch_image(id_batch, id_image, id_validation) VALUES(%s, %s, %s)")
@@ -173,7 +173,7 @@ def create_batch(hostname, username, password, database):
 					pos_golden = 0
 
 				query = ("UPDATE cluster SET used_in_batch = used_in_batch + 1 WHERE id_cluster = %s")
-				data = (1, id_cluster)
+				data = (id_cluster,)
 				cursor.execute(query, data)
 
 				query = ("SELECT id_image FROM image_cluster WHERE id_cluster = %s")
@@ -239,7 +239,7 @@ def create_batch(hostname, username, password, database):
 					pos_golden = 0
 
 				query = ("UPDATE cluster SET used_in_batch = used_in_batch + 1 WHERE id_cluster = %s")
-				data = (1, id_cluster)
+				data = (id_cluster,)
 				cursor.execute(query, data)
 
 				query = ("SELECT id_image FROM image_cluster WHERE id_cluster = %s")
